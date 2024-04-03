@@ -11,15 +11,25 @@ from django.contrib.auth.models import User, Group
 
 # Create your views here.
 
+
 class CategoryView(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated ,IsAdminUser]
+    permission_classes = []
+
 
 
 class MenuItemsView(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
+
+    def get_queryset(self):
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = self.queryset.filter(category__title = category)
+        else:
+            queryset = self.queryset
+        return queryset
 
     def get_permissions(self):
         permission_classes = []
@@ -31,12 +41,12 @@ class MenuItemsView(viewsets.ModelViewSet):
         return[permission() for permission in permission_classes]
 
 
+
 class ManagerView(viewsets.ModelViewSet):
     queryset = User.objects.filter(groups__name='manager')
-    serializer_class = ManagerGroupSerializer
+    serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     http_method_names = ['get', 'post', 'delete']
-
 
     def create(self, request, *args, **kwargs):
         username = self.request.data['username']
@@ -59,12 +69,12 @@ class ManagerView(viewsets.ModelViewSet):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
 
+
 class DeliveryCrewView(viewsets.ModelViewSet):
     queryset = User.objects.filter(groups__name='delivery-crew')
-    serializer_class = UserSerializer
+    serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated, IsAdminUser | IsManager]
     http_method_names = ['get', 'post', 'delete']
-
 
     def create(self, request, *args, **kwargs):
         username = self.request.data['username']

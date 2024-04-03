@@ -22,10 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['username']
 
 
-class ManagerGroupSerializer(serializers.ModelSerializer):
+class GroupSerializer(serializers.ModelSerializer):
     class Meta():
         model = User
-        fields = ['id','username','email']
+        fields = ['id','username']
 
 
 class CartSerializer(serializers.ModelSerializer):
