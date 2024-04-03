@@ -29,25 +29,37 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class CartSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
     menuitem = MenuItemSerializer(read_only=True)
     class Meta:
         model = Cart
-        fields = "__all__"
+        fields = ['menuitem', 'quantity', 'price']
+
+
+class AddToCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ['menuitem', 'quantity']
+        extra_kwars = {
+            'quantity': {'min_value': 1},
+        }
+
+
+class RemoveFromCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = ['menuitem']
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)    
-    delivery_crew = UserSerializer(read_only=True) 
-    
+    user = UserSerializer(read_only=True)      
     class Meta:
         model = Order
         fields = "__all__"
 
 
-class OrderItemSerializer(serializers.ModelSerializer):
-    order = UserSerializer(read_only=True)    
-    menuitem = MenuItemSerializer(read_only=True) 
-    class Meta:
-        model = OrderItem
-        fields = "__all__"
+# class OrderItemSerializer(serializers.ModelSerializer):
+#     order = UserSerializer(read_only=True)    
+#     menuitem = MenuItemSerializer(read_only=True) 
+#     class Meta:
+#         model = OrderItem
+#         fields = "__all__"
