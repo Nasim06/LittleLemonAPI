@@ -56,10 +56,3 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = "__all__"
 
-
-# class OrderItemSerializer(serializers.ModelSerializer):
-#     order = UserSerializer(read_only=True)    
-#     menuitem = MenuItemSerializer(read_only=True) 
-#     class Meta:
-#         model = OrderItem
-#         fields = "__all__"

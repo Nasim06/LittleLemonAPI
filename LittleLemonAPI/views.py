@@ -28,6 +28,7 @@ class CategoryView(viewsets.ModelViewSet):
         return[permission() for permission in permission_classes]
 
 
+
 class MenuItemsView(viewsets.ModelViewSet):
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
@@ -105,6 +106,8 @@ class DeliveryCrewView(viewsets.ModelViewSet):
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
+
+
 class CartView(viewsets.ModelViewSet):
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
@@ -112,7 +115,6 @@ class CartView(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = Cart.objects.filter(user=self.request.user)
         return queryset
-
     
     def create(self, request, *arg, **kwargs):
         itemData = AddToCartSerializer(data=request.data)
@@ -124,20 +126,18 @@ class CartView(viewsets.ModelViewSet):
         try:
             Cart.objects.create(user=request.user, quantity=quantity, unit_price=item.price, price=price, menuitem_id=id)
         except:
-            return Response(status=status.HTTP_409_CONFLICT, data={'message':'Item already present in cart'})
-        return Response(status=status.HTTP_201_CREATED, data={'message': item.title + ' added to cart'})
+            return Response(status=status.HTTP_409_CONFLICT, data={'Item already present in cart'})
+        return Response(status=status.HTTP_201_CREATED, data={item.title + ' added to cart'})
 
-    # def destroy(self, request, *arg, **kwargs):
-    #     if request.data['menuitem']:
-    #         itemData = RemoveFromCartSerializer(data=request.data)
-    #         itemData.is_valid(raise_exception=True)
-    #         menuitem = request.data['menuitem']
-    #         cart = get_object_or_404(Cart, user=request.user, menuitem=menuitem)
-    #         cart.delete()
-    #         return Response(status=200, data={'message':'Item removed from cart'})
-    #     else:
-    #         Cart.objects.filter(user=request.user).delete()
-    #         return Response(status=201, data={'message':'Cart is empty'})
+    def destroy(self, request, *arg, **kwargs):
+        id = self.kwargs.get('pk') 
+        if id:
+            cart = get_object_or_404(Cart, user=request.user, menuitem=id)
+            cart.delete()
+            return Response(status=200, data={'Item removed from cart'})
+        else:
+            Cart.objects.filter(user=request.user).delete()
+            return Response(status=201, data={'Cart is empty'})
         
 
 
@@ -156,10 +156,11 @@ class OrderView(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.request.method == 'GET' or 'POST' : 
             permission_classes = [IsAuthenticated]
-        elif self.request.method == 'PATCH':
+        if self.request.method == 'PATCH':
             permission_classes = [IsAuthenticated, IsManager | IsAdminUser | IsDeliveryCrew]
-        else:
+        if self.request.method == 'DELETE':
             permission_classes = [IsAuthenticated, IsManager | IsAdminUser]
+
         return[permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
@@ -167,7 +168,7 @@ class OrderView(viewsets.ModelViewSet):
 
         x = cart.values_list()
         if len(x) == 0:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={'message':'Your cart is empty'})
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'Your cart is empty'})
 
         total = math.fsum([float(x[-1]) for x in x])
         userOrder = Order.objects.create(user=request.user, delivery_crew=None, status=False, total=total, date=date.today())
@@ -178,5 +179,28 @@ class OrderView(viewsets.ModelViewSet):
             orderitem.save()
 
         cart.delete()
-        return Response(status=status.HTTP_201_CREATED, data={'message':'Your order has been placed! Your order number is {}'.format(str(userOrder.id))})
+        return Response(status=status.HTTP_201_CREATED, data={'Your order has been placed! Your order number is {}'.format(str(userOrder.id))})
     
+    def update(self, request, *args, **kwargs):
+        order = Order.objects.get(pk=self.kwargs['pk'])
+        if self.request.user.groups.filter(name='manager').exists() == True:
+            delivery_crew = request.data['delivery-crew']
+            if delivery_crew:
+                deliverers = User.objects.filter(groups__name='delivery-crew')
+                deliverer = get_object_or_404(deliverers, username=delivery_crew)
+                order.delivery_crew = deliverer
+                order.save()
+            return Response("order assigned to delivery crew")
+        if self.request.user.groups.filter(name='delivery-crew').exists() == True:
+            order.status = not order.status
+            order.save()
+            if order.status == True:
+                return Response("order marked as delivered")
+            return Response("order marked as not delivered")
+
+             
+
+        
+            
+
+        
