@@ -81,7 +81,7 @@ class ManagerView(viewsets.ModelViewSet):
 
 
 class DeliveryCrewView(viewsets.ModelViewSet):
-    queryset = User.objects.filter(groups__name='delivery-crew')
+    queryset = User.objects.filter(groups__name='delivery_crew')
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated, IsAdminUser | IsManager]
     http_method_names = ['get', 'post', 'delete']
@@ -90,7 +90,7 @@ class DeliveryCrewView(viewsets.ModelViewSet):
         username = self.request.data['username']
         if username:
             user = get_object_or_404(User, username=username)
-            deliveryCrew = Group.objects.get(name='delivery-crew')
+            deliveryCrew = Group.objects.get(name='delivery_crew')
             deliveryCrew.user_set.add(user)
             return Response(user.username + " added to the delivery crew")
         else:
@@ -100,7 +100,7 @@ class DeliveryCrewView(viewsets.ModelViewSet):
         try:
             pk = self.kwargs['pk']
             user = get_object_or_404(User, pk=pk)
-            deliveryCrew = Group.objects.get(name='delivery-crew')
+            deliveryCrew = Group.objects.get(name='delivery_crew')
             deliveryCrew.user_set.remove(user)
             return Response(user.username + " was removed from the delivery crew")
         except:
@@ -147,7 +147,7 @@ class OrderView(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.groups.filter(name='manager').exists() or self.request.user.is_superuser == True :
             query = Order.objects.all()
-        elif self.request.user.groups.filter(name='delivery-crew').exists():
+        elif self.request.user.groups.filter(name='delivery_crew').exists():
             query = Order.objects.filter(delivery_crew=self.request.user)
         else:
             query = Order.objects.filter(user=self.request.user)
@@ -184,21 +184,25 @@ class OrderView(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         order = Order.objects.get(pk=self.kwargs['pk'])
         if self.request.user.groups.filter(name='manager').exists() == True:
-            delivery_crew = request.data['delivery-crew']
+            delivery_crew = request.data['delivery_crew']
             if delivery_crew:
-                deliverers = User.objects.filter(groups__name='delivery-crew')
+                deliverers = User.objects.filter(groups__name='delivery_crew')
                 deliverer = get_object_or_404(deliverers, username=delivery_crew)
                 order.delivery_crew = deliverer
                 order.save()
             return Response("order assigned to delivery crew")
-        if self.request.user.groups.filter(name='delivery-crew').exists() == True:
+        if self.request.user.groups.filter(name='delivery_crew').exists() == True:
             order.status = not order.status
             order.save()
             if order.status == True:
                 return Response("order marked as delivered")
             return Response("order marked as not delivered")
 
-             
+    def destroy(self, request, *args, **kwargs):
+        order = Order.objects.get(pk=self.kwargs['pk'])
+        order_number = str(order.id)
+        order.delete()
+        return Response(status=status.HTTP_200_OK, data={'Order ' + order_number + ' was deleted'})            
 
         
             
