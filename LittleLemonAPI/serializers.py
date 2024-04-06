@@ -44,12 +44,6 @@ class AddToCartSerializer(serializers.ModelSerializer):
         }
 
 
-class RemoveFromCartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cart
-        fields = ['menuitem']
-
-
 class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)      
     class Meta:
