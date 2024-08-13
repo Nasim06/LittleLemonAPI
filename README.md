@@ -1,9 +1,9 @@
 # LittleLemonAPI
-API for the fictional restaurant Little Lemon, made for the Meta back end developer course.
+API for the fictional restaurant Little Lemon.
 
 The API has models for menu items, categories, carts, orders and order items. 
 There also the groups manager and delivery crew as well as the admin with many actions being limited to certain users/groups.
-The criteria for the assignment were as follows:
+The criteria for the API was:
 1.	The admin can assign users to the manager group
 2.	You can access the manager group with an admin token
 3.	The admin can add menu items 
@@ -26,7 +26,6 @@ The criteria for the assignment were as follows:
 20.	Customers can place orders
 21.	Customers can browse their own orders
 
-After review, my submission received 21/21 points.
 
 
 
